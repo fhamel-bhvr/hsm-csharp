@@ -598,6 +598,26 @@ namespace Hsm
             InvokeStates(aMethodName, aArgs, CreateReverseIterator(mStateStack));
         }
 
+        public void InvokeOuterToInner(Action<State> aLambda)
+        {
+            InvokeStates(aLambda, mStateStack);
+        }
+
+        public void InvokeInnerToOuter(Action<State> aLambda)
+        {
+            InvokeStates(aLambda, CreateReverseIterator(mStateStack));
+        }
+        
+        public void InvokeOuterToInner(Func<State, bool> aLambda)
+        {
+            InvokeStates(aLambda, mStateStack);
+        }
+
+        public void InvokeInnerToOuter(Func<State, bool> aLambda)
+        {
+            InvokeStates(aLambda, CreateReverseIterator(mStateStack));
+        }
+
         // PRIVATE
 
         static private IEnumerable<T> CreateReverseIterator<T>(IList<T> aList)
@@ -631,6 +651,24 @@ namespace Hsm
             }
         }
 
+        private void InvokeStates(Action<State> aLambda, IEnumerable<State> aEnumerable)
+        {
+            foreach (State state in aEnumerable)
+            {
+                aLambda(state);
+            }
+        }
+
+        private void InvokeStates(Func<State, bool> aLambda, IEnumerable<State> aEnumerable)
+        {
+            foreach (State state in aEnumerable)
+            {
+                var keepGoing = aLambda(state);
+                if (!keepGoing)
+                    return;
+            }
+        }
+        
         private void LogTransition(TraceLevel aTraceLevel, int aDepth, string aTransitionName, Type aTargetStateType)
         {
             if (mTraceLevel < aTraceLevel)
